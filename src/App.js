@@ -6,6 +6,9 @@ import Dashboard from './pages/Dashboard';
 import Patients from './pages/Patients';
 import Appointments from './pages/Appointments';
 import Profile from './pages/Profile';
+// IMPORT THE NEW PAGES HERE
+import Reports from './pages/Reports';
+import Medications from './pages/Medications';
 
 function Loading() {
   return React.createElement('div', { className: 'loading' },
@@ -65,6 +68,15 @@ function Navigation() {
             to: '/appointments', 
             className: `nav-link ${isActive('/appointments') ? 'active' : ''}`
           }, 'Appointments'),
+          // ADDED NEW LINKS TO NAVIGATION BAR
+          React.createElement(Link, { 
+            to: '/reports', 
+            className: `nav-link ${isActive('/reports') ? 'active' : ''}`
+          }, 'Reports'),
+          React.createElement(Link, { 
+            to: '/medications', 
+            className: `nav-link ${isActive('/medications') ? 'active' : ''}`
+          }, 'Medications'),
           React.createElement(Link, { 
             to: '/profile', 
             className: `nav-link ${isActive('/profile') ? 'active' : ''}`
@@ -109,6 +121,15 @@ function AppContent() {
         React.createElement(Route, { 
           path: '/appointments', 
           element: React.createElement(ProtectedRoute, null, React.createElement(Appointments))
+        }),
+        // ADDED NEW ROUTES HERE
+        React.createElement(Route, { 
+          path: '/reports', 
+          element: React.createElement(ProtectedRoute, null, React.createElement(Reports))
+        }),
+        React.createElement(Route, { 
+          path: '/medications', 
+          element: React.createElement(ProtectedRoute, null, React.createElement(Medications))
         }),
         React.createElement(Route, { 
           path: '/profile', 
