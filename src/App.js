@@ -8,7 +8,7 @@ import Appointments from './pages/Appointments';
 import Profile from './pages/Profile';
 // IMPORT THE NEW PAGES HERE
 import Reports from './pages/Reports';
-import Medications from './pages/Medications';
+import Medications from './pages/medication';
 
 function Loading() {
   return React.createElement('div', { className: 'loading' },
