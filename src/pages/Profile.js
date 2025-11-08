@@ -97,7 +97,8 @@ export default function Profile() {
 
       // Show success message for a while before refreshing
       setTimeout(() => {
-        window.location.reload();
+        const { navigate } = useNavigate();
+        navigate('/profile'); // Or just remove the reload
       }, 2000);
       
     } catch (err) {
