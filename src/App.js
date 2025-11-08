@@ -1,5 +1,5 @@
 import React from 'react';
-import { BrowserRouter as Router, Routes, Route, Navigate, useLocation } from 'react-router-dom';
+import { BrowserRouter as Router, Routes, Route, Navigate, useLocation, Link } from 'react-router-dom';
 import { AuthProvider, useAuth } from './contexts/AuthContext';
 import Login from './pages/Login';
 import Dashboard from './pages/Dashboard';
@@ -53,20 +53,20 @@ function Navigation() {
           'PMS'
         ),
         React.createElement('div', { className: 'nav-links' },
-          React.createElement('a', { 
-            href: '/dashboard',
+          React.createElement(Link, { 
+            to: '/dashboard',
             className: `nav-link ${isActive('/dashboard') ? 'active' : ''}`
           }, 'Dashboard'),
-          React.createElement('a', { 
-            href: '/patients',
+          React.createElement(Link, { 
+            to: '/patients',
             className: `nav-link ${isActive('/patients') ? 'active' : ''}`
           }, 'Patients'),
-          React.createElement('a', { 
-            href: '/appointments', 
+          React.createElement(Link, { 
+            to: '/appointments', 
             className: `nav-link ${isActive('/appointments') ? 'active' : ''}`
           }, 'Appointments'),
-          React.createElement('a', { 
-            href: '/profile', 
+          React.createElement(Link, { 
+            to: '/profile', 
             className: `nav-link ${isActive('/profile') ? 'active' : ''}`
           }, 'Profile')
         )
