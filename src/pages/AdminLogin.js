@@ -41,103 +41,100 @@ export default function AdminLogin() {
     }
   };
 
-  return (
-    <div style={{ 
+  return React.createElement('div', { 
+    style: { 
       minHeight: '100vh',
       display: 'flex',
       alignItems: 'center',
       justifyContent: 'center',
       background: 'linear-gradient(135deg, #1e3a8a 0%, #3730a3 100%)',
       padding: '20px'
-    }}>
-      <div className="card" style={{ 
+    } 
+  },
+    React.createElement('div', { 
+      className: 'card',
+      style: { 
         width: '100%',
         maxWidth: '400px',
         padding: '40px'
-      }}>
-        <div style={{ textAlign: 'center', marginBottom: '32px' }}>
-          <h1 style={{ 
+      } 
+    },
+      React.createElement('div', { style: { textAlign: 'center', marginBottom: '32px' } },
+        React.createElement('h1', { 
+          style: { 
             fontSize: '28px',
             fontWeight: '700',
             color: 'var(--text)',
             marginBottom: '8px'
-          }}>
-            Admin Portal
-          </h1>
-          <p style={{ 
+          } 
+        }, 'Admin Portal'),
+        React.createElement('p', { 
+          style: { 
             color: 'var(--text-light)',
             fontSize: '16px'
-          }}>
-            Administrator access only
-          </p>
-        </div>
+          } 
+        }, 'Administrator access only')
+      ),
 
-        {error && (
-          <div className="alert alert-error">
-            {error}
-          </div>
-        )}
+      error && React.createElement('div', { 
+        className: 'alert alert-error'
+      }, error),
 
-        <form onSubmit={handleAdminLogin}>
-          <div className="form-group">
-            <label className="form-label">Admin Username</label>
-            <input
-              type="text"
-              className="form-input"
-              placeholder="Enter admin username"
-              value={username}
-              onChange={(e) => setUsername(e.target.value)}
-              required
-              disabled={isLoading}
-            />
-          </div>
-          
-          <div className="form-group">
-            <label className="form-label">Admin Password</label>
-            <input
-              type="password"
-              className="form-input"
-              placeholder="Enter admin password"
-              value={password}
-              onChange={(e) => setPassword(e.target.value)}
-              required
-              disabled={isLoading}
-            />
-          </div>
-          
-          <button
-            type="submit"
-            className="btn btn-primary"
-            disabled={isLoading}
-            style={{ width: '100%', marginBottom: '16px' }}
-          >
-            {isLoading ? (
-              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                <div className="loading-spinner" />
-                Authenticating...
-              </div>
-            ) : (
-              'Admin Login'
-            )}
-          </button>
-        </form>
+      React.createElement('form', { onSubmit: handleAdminLogin },
+        React.createElement('div', { className: 'form-group' },
+          React.createElement('label', { className: 'form-label' }, 'Admin Username'),
+          React.createElement('input', {
+            type: 'text',
+            className: 'form-input',
+            placeholder: 'Enter admin username',
+            value: username,
+            onChange: (e) => setUsername(e.target.value),
+            required: true,
+            disabled: isLoading
+          })
+        ),
+        
+        React.createElement('div', { className: 'form-group' },
+          React.createElement('label', { className: 'form-label' }, 'Admin Password'),
+          React.createElement('input', {
+            type: 'password',
+            className: 'form-input',
+            placeholder: 'Enter admin password',
+            value: password,
+            onChange: (e) => setPassword(e.target.value),
+            required: true,
+            disabled: isLoading
+          })
+        ),
+        
+        React.createElement('button', {
+          type: 'submit',
+          className: 'btn btn-primary',
+          disabled: isLoading,
+          style: { width: '100%', marginBottom: '16px' }
+        }, 
+          isLoading 
+            ? React.createElement('div', { style: { display: 'flex', alignItems: 'center', justifyContent: 'center' } },
+                React.createElement('div', { className: 'loading-spinner' }),
+                'Authenticating...'
+              )
+            : 'Admin Login'
+        )
+      ),
 
-        <div style={{ textAlign: 'center', marginTop: '24px' }}>
-          <button
-            onClick={() => window.location.href = '/login'}
-            style={{
-              background: 'none',
-              border: 'none',
-              color: 'var(--primary)',
-              cursor: 'pointer',
-              fontWeight: '500',
-              fontSize: '14px'
-            }}
-          >
-            ← Back to User Login
-          </button>
-        </div>
-      </div>
-    </div>
+      React.createElement('div', { style: { textAlign: 'center', marginTop: '24px' } },
+        React.createElement('button', {
+          onClick: () => window.location.href = '/login',
+          style: {
+            background: 'none',
+            border: 'none',
+            color: 'var(--primary)',
+            cursor: 'pointer',
+            fontWeight: '500',
+            fontSize: '14px'
+          }
+        }, '← Back to User Login')
+      )
+    )
   );
 }
