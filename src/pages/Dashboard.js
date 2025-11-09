@@ -668,7 +668,7 @@ export default function Dashboard() {
               marginBottom: '4px' 
             } 
           }, '💊'),
-          'Medications'
+          ' medicujaction'
         )
       )
     )
