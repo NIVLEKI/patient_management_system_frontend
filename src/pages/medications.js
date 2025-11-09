@@ -1,536 +1,676 @@
 import React, { useState, useEffect } from 'react';
 import { useAuth } from '../contexts/AuthContext';
+import { useNavigate } from 'react-router-dom';
 
-export default function Medications() {
-  const [medications, setMedications] = useState([]);
-  const [patients, setPatients] = useState([]);
-  const [loading, setLoading] = useState(false);
-  const [error, setError] = useState('');
-  const [showAddModal, setShowAddModal] = useState(false);
+export default function Dashboard() {
   const { user } = useAuth();
+  const navigate = useNavigate();
+  const [stats, setStats] = useState({});
+  const [recentAppointments, setRecentAppointments] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState('');
+  const [activeFilter, setActiveFilter] = useState('all');
 
   // API Base URL for production
   const API_BASE_URL = 'https://patient-management-system-in-python.onrender.com/api';
 
-  // New medication form
-  const [newMedication, setNewMedication] = useState({
-    patient_id: '',
-    name: '',
-    dosage: '',
-    frequency: '',
-    route: 'oral',
-    start_date: '',
-    end_date: '',
-    instructions: '',
-    status: 'active'
-  });
-
-  const fetchMedications = async () => {
-    setLoading(true);
-    setError('');
+  const fetchDashboardData = async () => {
     try {
+      setError('');
       const token = localStorage.getItem('token');
+      
       if (!token) {
         throw new Error('No authentication token found');
       }
 
-      const response = await fetch(`${API_BASE_URL}/medications`, {
-        headers: {
-          'Authorization': `Bearer ${token}`
-        }
+      // Fetch stats
+      const statsResponse = await fetch(`${API_BASE_URL}/dashboard/stats`, {
+        headers: { 'Authorization': `Bearer ${token}` }
       });
       
-      if (!response.ok) {
-        throw new Error('Failed to fetch medications');
+      if (!statsResponse.ok) {
+        throw new Error('Failed to fetch dashboard statistics');
       }
+
+      const statsData = await statsResponse.json();
+      setStats(statsData.stats || {});
+
+      // Fetch recent appointments
+      const appointmentsResponse = await fetch(`${API_BASE_URL}/dashboard/recent-appointments`, {
+        headers: { 'Authorization': `Bearer ${token}` }
+      });
       
-      const data = await response.json();
-      setMedications(data.medications || []);
-    } catch (err) {
-      setError(err.message);
+      if (!appointmentsResponse.ok) {
+        throw new Error('Failed to fetch recent appointments');
+      }
+
+      const appointmentsData = await appointmentsResponse.json();
+      setRecentAppointments(appointmentsData.appointments || []);
+    } catch (error) {
+      console.error('Failed to fetch dashboard data:', error);
+      setError(error.message);
     } finally {
       setLoading(false);
-    }
-  };
-
-  const fetchPatients = async () => {
-    try {
-      const token = localStorage.getItem('token');
-      if (!token) return;
-
-      const response = await fetch(`${API_BASE_URL}/patients`, {
-        headers: {
-          'Authorization': `Bearer ${token}`
-        }
-      });
-      
-      if (response.ok) {
-        const data = await response.json();
-        setPatients(data.patients || []);
-      }
-    } catch (err) {
-      console.error('Failed to fetch patients:', err);
     }
   };
 
   const refreshData = () => {
-    fetchMedications();
-    fetchPatients();
+    setLoading(true);
+    fetchDashboardData();
   };
 
   useEffect(() => {
-    fetchMedications();
-    fetchPatients();
+    fetchDashboardData();
   }, []);
 
-  const handleAddMedication = async (e) => {
-    e.preventDefault();
-    setLoading(true);
-    setError('');
-
-    try {
-      const token = localStorage.getItem('token');
-      if (!token) {
-        throw new Error('No authentication token found');
-      }
-
-      const response = await fetch(`${API_BASE_URL}/medications`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${token}`
-        },
-        body: JSON.stringify({
-          ...newMedication,
-          prescribed_by: user?.name || 'Unknown Doctor'
-        })
-      });
-
-      if (!response.ok) {
-        const errorData = await response.json();
-        throw new Error(errorData.error || 'Failed to add medication');
-      }
-
-      // Reset form and close modal
-      setNewMedication({
-        patient_id: '',
-        name: '',
-        dosage: '',
-        frequency: '',
-        route: 'oral',
-        start_date: '',
-        end_date: '',
-        instructions: '',
-        status: 'active'
-      });
-      setShowAddModal(false);
-      
-      // Refresh medications list
-      fetchMedications();
-      
-      alert('Medication added successfully!');
-      
-    } catch (err) {
-      setError(err.message);
-    } finally {
-      setLoading(false);
-    }
+  // Navigation handlers
+  const navigateTo = (path) => {
+    navigate(path);
   };
 
-  const handleInputChange = (field, value) => {
-    setNewMedication(prev => ({
-      ...prev,
-      [field]: value
-    }));
+  const handleAppointmentClick = (appointment) => {
+    // You can expand this to show appointment details
+    console.log('Appointment clicked:', appointment);
   };
 
-  const getStatusColor = (status) => {
-    switch (status) {
-      case 'active': return 'status-scheduled';
-      case 'completed': return 'status-completed';
-      case 'discontinued': return 'status-cancelled';
-      default: return 'status-scheduled';
-    }
+  if (!user) {
+    return React.createElement('div', { className: 'loading' }, 'Please login to access dashboard');
+  }
+
+  // Format numbers with proper fallbacks
+  const formatStat = (value) => {
+    if (value === undefined || value === null) return '0';
+    return value.toString();
   };
 
-  const updateMedicationStatus = async (medicationId, newStatus) => {
-    try {
-      const token = localStorage.getItem('token');
-      const response = await fetch(`${API_BASE_URL}/medications/${medicationId}`, {
-        method: 'PUT',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${token}`
-        },
-        body: JSON.stringify({ status: newStatus })
-      });
-
-      if (response.ok) {
-        fetchMedications();
-        alert(`Medication marked as ${newStatus}`);
-      }
-    } catch (err) {
-      setError('Failed to update medication status');
-    }
-  };
-
-  const formatDate = (dateString) => {
-    if (!dateString) return 'Not specified';
-    return new Date(dateString).toLocaleDateString();
-  };
-
-  // Add Medication Modal
-  const AddMedicationModal = () => {
-    if (!showAddModal) return null;
-
-    return React.createElement('div', {
-      style: {
-        position: 'fixed',
-        top: 0,
-        left: 0,
-        right: 0,
-        bottom: 0,
-        backgroundColor: 'rgba(0, 0, 0, 0.5)',
-        display: 'flex',
-        alignItems: 'center',
-        justifyContent: 'center',
-        zIndex: 1000,
-        padding: '20px'
-      }
+  return React.createElement('div', { 
+    style: { 
+      maxWidth: '1200px', 
+      margin: '0 auto', 
+      padding: '24px',
+      minHeight: '100vh'
+    } 
+  },
+    // Header with enhanced styling
+    React.createElement('div', { 
+      className: 'card',
+      style: { 
+        marginBottom: '32px',
+        padding: '32px',
+        background: 'linear-gradient(135deg, var(--surface) 0%, #f8fafc 100%)'
+      } 
     },
-      React.createElement('div', {
-        className: 'card',
-        style: {
-          width: '100%',
-          maxWidth: '600px',
-          maxHeight: '90vh',
-          overflow: 'auto'
-        }
+      React.createElement('div', { 
+        style: { 
+          display: 'flex', 
+          justifyContent: 'space-between', 
+          alignItems: 'flex-start', 
+          flexWrap: 'wrap', 
+          gap: '16px' 
+        } 
       },
-        React.createElement('div', {
-          style: {
-            display: 'flex',
-            justifyContent: 'space-between',
-            alignItems: 'center',
-            marginBottom: '24px',
-            paddingBottom: '16px',
-            borderBottom: '1px solid var(--border)'
+        React.createElement('div', null,
+          React.createElement('h1', { 
+            style: { 
+              fontSize: 'clamp(24px, 4vw, 32px)',
+              fontWeight: '700',
+              color: 'var(--text)',
+              marginBottom: '8px',
+              background: 'linear-gradient(135deg, var(--text) 0%, var(--text-light) 100%)',
+              WebkitBackgroundClip: 'text',
+              WebkitTextFillColor: 'transparent'
+            } 
+          }, `Welcome back, ${user.name || 'User'}!`),
+          React.createElement('p', { 
+            style: { 
+              color: 'var(--text-light)',
+              fontSize: '16px',
+              maxWidth: '500px'
+            } 
+          }, `Here's what's happening with your patients today.`)
+        ),
+        React.createElement('button', {
+          onClick: refreshData,
+          className: 'btn btn-outline',
+          disabled: loading,
+          style: { 
+            display: 'flex', 
+            alignItems: 'center', 
+            gap: '8px',
+            minWidth: '140px',
+            justifyContent: 'center'
           }
         },
-          React.createElement('h2', {
-            style: {
-              fontSize: '20px',
-              fontWeight: '600',
-              color: 'var(--text)'
-            }
-          }, 'Add New Medication'),
-          React.createElement('button', {
-            onClick: () => setShowAddModal(false),
-            style: {
-              background: 'none',
-              border: 'none',
-              fontSize: '20px',
-              cursor: 'pointer',
-              color: 'var(--text-light)'
-            }
-          }, '×')
-        ),
-
-        React.createElement('form', { onSubmit: handleAddMedication },
-          React.createElement('div', { style: { display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '16px' } },
-            React.createElement('div', { className: 'form-group' },
-              React.createElement('label', { className: 'form-label' }, 'Patient *'),
-              React.createElement('select',
-                {
-                  className: 'form-input',
-                  value: newMedication.patient_id,
-                  onChange: (e) => handleInputChange('patient_id', e.target.value),
-                  required: true,
-                  disabled: loading
-                },
-                React.createElement('option', { value: '' }, 'Select a patient'),
-                patients.map(patient => 
-                  React.createElement('option', { 
-                    key: patient.id, 
-                    value: patient.id 
-                  }, `${patient.name} (MRN: ${patient.mrn})`)
-                )
-              )
-            ),
-
-            React.createElement('div', { className: 'form-group' },
-              React.createElement('label', { className: 'form-label' }, 'Medication Name *'),
-              React.createElement('input', {
-                type: 'text',
-                className: 'form-input',
-                placeholder: 'e.g., Amoxicillin 500mg',
-                value: newMedication.name,
-                onChange: (e) => handleInputChange('name', e.target.value),
-                required: true,
-                disabled: loading
-              })
-            )
-          ),
-
-          React.createElement('div', { style: { display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '16px' } },
-            React.createElement('div', { className: 'form-group' },
-              React.createElement('label', { className: 'form-label' }, 'Dosage'),
-              React.createElement('input', {
-                type: 'text',
-                className: 'form-input',
-                placeholder: 'e.g., 10mg twice daily',
-                value: newMedication.dosage,
-                onChange: (e) => handleInputChange('dosage', e.target.value),
-                disabled: loading
-              })
-            ),
-
-            React.createElement('div', { className: 'form-group' },
-              React.createElement('label', { className: 'form-label' }, 'Frequency'),
-              React.createElement('input', {
-                type: 'text',
-                className: 'form-input',
-                placeholder: 'e.g., Once daily',
-                value: newMedication.frequency,
-                onChange: (e) => handleInputChange('frequency', e.target.value),
-                disabled: loading
-              })
-            )
-          ),
-
-          React.createElement('div', { style: { display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '16px' } },
-            React.createElement('div', { className: 'form-group' },
-              React.createElement('label', { className: 'form-label' }, 'Route'),
-              React.createElement('select',
-                {
-                  className: 'form-input',
-                  value: newMedication.route,
-                  onChange: (e) => handleInputChange('route', e.target.value),
-                  disabled: loading
-                },
-                React.createElement('option', { value: 'oral' }, 'Oral'),
-                React.createElement('option', { value: 'iv' }, 'IV'),
-                React.createElement('option', { value: 'inhalation' }, 'Inhalation'),
-                React.createElement('option', { value: 'topical' }, 'Topical'),
-                React.createElement('option', { value: 'injection' }, 'Injection')
-              )
-            ),
-
-            React.createElement('div', { className: 'form-group' },
-              React.createElement('label', { className: 'form-label' }, 'Status'),
-              React.createElement('select',
-                {
-                  className: 'form-input',
-                  value: newMedication.status,
-                  onChange: (e) => handleInputChange('status', e.target.value),
-                  disabled: loading
-                },
-                React.createElement('option', { value: 'active' }, 'Active'),
-                React.createElement('option', { value: 'completed' }, 'Completed'),
-                React.createElement('option', { value: 'discontinued' }, 'Discontinued')
-              )
-            )
-          ),
-
-          React.createElement('div', { style: { display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '16px' } },
-            React.createElement('div', { className: 'form-group' },
-              React.createElement('label', { className: 'form-label' }, 'Start Date'),
-              React.createElement('input', {
-                type: 'date',
-                className: 'form-input',
-                value: newMedication.start_date,
-                onChange: (e) => handleInputChange('start_date', e.target.value),
-                disabled: loading
-              })
-            ),
-
-            React.createElement('div', { className: 'form-group' },
-              React.createElement('label', { className: 'form-label' }, 'End Date'),
-              React.createElement('input', {
-                type: 'date',
-                className: 'form-input',
-                value: newMedication.end_date,
-                onChange: (e) => handleInputChange('end_date', e.target.value),
-                disabled: loading
-              })
-            )
-          ),
-
-          React.createElement('div', { className: 'form-group' },
-            React.createElement('label', { className: 'form-label' }, 'Instructions'),
-            React.createElement('textarea', {
-              className: 'form-input',
-              rows: 3,
-              placeholder: 'Special instructions for the patient...',
-              value: newMedication.instructions,
-              onChange: (e) => handleInputChange('instructions', e.target.value),
-              disabled: loading
-            })
-          ),
-
-          React.createElement('div', {
-            style: {
-              display: 'flex',
-              gap: '12px',
-              justifyContent: 'flex-end',
-              marginTop: '24px'
-            }
-          },
-            React.createElement('button', {
-              type: 'button',
-              className: 'btn btn-outline',
-              onClick: () => setShowAddModal(false),
-              disabled: loading
-            }, 'Cancel'),
-            React.createElement('button', {
-              type: 'submit',
-              className: 'btn btn-primary',
-              disabled: loading
-            }, loading ? 'Adding...' : 'Add Medication')
+          loading ? React.createElement('div', { 
+            style: { 
+              display: 'flex', 
+              alignItems: 'center', 
+              gap: '8px' 
+            } 
+          }, 
+            React.createElement('div', { className: 'loading-spinner' }),
+            'Refreshing...'
+          ) : React.createElement('div', { 
+            style: { 
+              display: 'flex', 
+              alignItems: 'center', 
+              gap: '8px' 
+            } 
+          }, 
+            '🔄 Refresh Data'
           )
         )
       )
-    );
-  };
+    ),
 
-  return React.createElement('div', { style: { maxWidth: '1200px', margin: '0 auto', padding: '24px' } },
-    // Header
-    React.createElement('div', { style: { display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '24px', flexWrap: 'wrap', gap: '16px' } },
-      React.createElement('div', null,
-        React.createElement('h1', { 
-          style: { 
-            fontSize: '28px',
-            fontWeight: '700',
-            color: 'var(--text)',
-            marginBottom: '4px'
-          } 
-        }, 'Medications'),
-        React.createElement('p', { 
-          style: { 
-            color: 'var(--text-light)',
-            fontSize: '16px'
-          } 
-        }, 'Manage patient medications and prescriptions')
+    // Error Alert
+    error && React.createElement('div', { 
+      className: 'alert alert-error',
+      style: { 
+        marginBottom: '24px',
+        display: 'flex',
+        justifyContent: 'space-between',
+        alignItems: 'center'
+      }
+    }, 
+      React.createElement('div', { 
+        style: { display: 'flex', alignItems: 'center', gap: '8px' } 
+      },
+        '⚠️',
+        error
       ),
-      
-      React.createElement('div', { style: { display: 'flex', gap: '12px' } },
-        React.createElement('button', { 
-          onClick: refreshData,
-          className: 'btn btn-outline',
-          disabled: loading
-        }, loading ? 'Refreshing...' : '⟳ Refresh'),
-        React.createElement('button', { 
-          onClick: () => setShowAddModal(true),
-          className: 'btn btn-primary'
-        }, '+ Add Medication')
+      React.createElement('button', {
+        onClick: () => setError(''),
+        style: {
+          background: 'none',
+          border: 'none',
+          fontSize: '18px',
+          cursor: 'pointer',
+          color: 'var(--error)'
+        }
+      }, '×')
+    ),
+
+    // Enhanced Stats Grid
+    React.createElement('div', { 
+      className: 'stats-grid',
+      style: { 
+        marginBottom: '32px'
+      } 
+    },
+      // Total Patients
+      React.createElement('div', { 
+        className: 'card stat-card',
+        style: { 
+          position: 'relative',
+          overflow: 'hidden',
+          borderLeft: '4px solid var(--primary)'
+        } 
+      },
+        React.createElement('div', { 
+          style: { 
+            display: 'flex', 
+            alignItems: 'center', 
+            gap: '16px' 
+          } 
+        },
+          React.createElement('div', { 
+            className: 'stat-icon',
+            style: { 
+              width: '56px',
+              height: '56px',
+              borderRadius: '12px',
+              backgroundColor: 'rgba(37, 99, 235, 0.1)',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              fontSize: '24px'
+            } 
+          }, '👥'),
+          React.createElement('div', { className: 'stat-content' },
+            React.createElement('div', { 
+              className: 'stat-value',
+              style: { fontSize: 'clamp(24px, 3vw, 32px)' } 
+            }, 
+              loading ? React.createElement('div', { 
+                className: 'loading-spinner',
+                style: { width: '24px', height: '24px' } 
+              }) : formatStat(stats.total_patients)
+            ),
+            React.createElement('div', { 
+              className: 'stat-label',
+              style: { fontSize: '14px', fontWeight: '600' } 
+            }, 'Total Patients')
+          )
+        )
+      ),
+
+      // Today's Appointments
+      React.createElement('div', { 
+        className: 'card stat-card',
+        style: { 
+          position: 'relative',
+          overflow: 'hidden',
+          borderLeft: '4px solid var(--success)'
+        } 
+      },
+        React.createElement('div', { 
+          style: { 
+            display: 'flex', 
+            alignItems: 'center', 
+            gap: '16px' 
+          } 
+        },
+          React.createElement('div', { 
+            className: 'stat-icon',
+            style: { 
+              width: '56px',
+              height: '56px',
+              borderRadius: '12px',
+              backgroundColor: 'rgba(16, 185, 129, 0.1)',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              fontSize: '24px'
+            } 
+          }, '📅'),
+          React.createElement('div', { className: 'stat-content' },
+            React.createElement('div', { 
+              className: 'stat-value',
+              style: { fontSize: 'clamp(24px, 3vw, 32px)' } 
+            }, 
+              loading ? React.createElement('div', { 
+                className: 'loading-spinner',
+                style: { width: '24px', height: '24px' } 
+              }) : formatStat(stats.todays_appointments)
+            ),
+            React.createElement('div', { 
+              className: 'stat-label',
+              style: { fontSize: '14px', fontWeight: '600' } 
+            }, "Today's Appointments")
+          )
+        )
+      ),
+
+      // Upcoming Appointments
+      React.createElement('div', { 
+        className: 'card stat-card',
+        style: { 
+          position: 'relative',
+          overflow: 'hidden',
+          borderLeft: '4px solid var(--warning)'
+        } 
+      },
+        React.createElement('div', { 
+          style: { 
+            display: 'flex', 
+            alignItems: 'center', 
+            gap: '16px' 
+          } 
+        },
+          React.createElement('div', { 
+            className: 'stat-icon',
+            style: { 
+              width: '56px',
+              height: '56px',
+              borderRadius: '12px',
+              backgroundColor: 'rgba(245, 158, 11, 0.1)',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              fontSize: '24px'
+            } 
+          }, '⏰'),
+          React.createElement('div', { className: 'stat-content' },
+            React.createElement('div', { 
+              className: 'stat-value',
+              style: { fontSize: 'clamp(24px, 3vw, 32px)' } 
+            }, 
+              loading ? React.createElement('div', { 
+                className: 'loading-spinner',
+                style: { width: '24px', height: '24px' } 
+              }) : formatStat(stats.upcoming_appointments)
+            ),
+            React.createElement('div', { 
+              className: 'stat-label',
+              style: { fontSize: '14px', fontWeight: '600' } 
+            }, 'Upcoming Appointments')
+          )
+        )
+      ),
+
+      // Recent Activities
+      React.createElement('div', { 
+        className: 'card stat-card',
+        style: { 
+          position: 'relative',
+          overflow: 'hidden',
+          borderLeft: '4px solid #8b5cf6'
+        } 
+      },
+        React.createElement('div', { 
+          style: { 
+            display: 'flex', 
+            alignItems: 'center', 
+            gap: '16px' 
+          } 
+        },
+          React.createElement('div', { 
+            className: 'stat-icon',
+            style: { 
+              width: '56px',
+              height: '56px',
+              borderRadius: '12px',
+              backgroundColor: 'rgba(139, 92, 246, 0.1)',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              fontSize: '24px'
+            } 
+          }, '📊'),
+          React.createElement('div', { className: 'stat-content' },
+            React.createElement('div', { 
+              className: 'stat-value',
+              style: { fontSize: 'clamp(24px, 3vw, 32px)' } 
+            }, 
+              loading ? React.createElement('div', { 
+                className: 'loading-spinner',
+                style: { width: '24px', height: '24px' } 
+              }) : formatStat(recentAppointments.length)
+            ),
+            React.createElement('div', { 
+              className: 'stat-label',
+              style: { fontSize: '14px', fontWeight: '600' } 
+            }, 'Recent Activities')
+          )
+        )
       )
     ),
 
-    error && React.createElement('div', { className: 'alert alert-error' }, error),
-
-    // Add Medication Modal
-    React.createElement(AddMedicationModal),
-
-    loading ? React.createElement('div', { className: 'loading' }, 'Loading medications...') :
-    medications.length === 0 ? 
-      React.createElement('div', { className: 'card', style: { textAlign: 'center', padding: '60px' } },
-        React.createElement('div', { style: { fontSize: '48px', marginBottom: '16px' } }, '💊'),
-        React.createElement('h3', { style: { marginBottom: '8px', color: 'var(--text)' } }, 'No medications found'),
-        React.createElement('p', { style: { color: 'var(--text-light)', marginBottom: '20px' } }, 
-          'Add your first medication to get started'
-        ),
-        React.createElement('button', {
-          onClick: () => setShowAddModal(true),
-          className: 'btn btn-primary'
-        }, 'Add First Medication')
-      ) :
-      React.createElement('div', { className: 'grid-container' },
-        medications.map(medication => {
-          const patient = patients.find(p => p.id === medication.patient_id);
-          
-          return React.createElement('div', { 
-            key: medication.id,
-            className: 'card patient-card'
+    // Recent Appointments Section with Filters
+    React.createElement('div', { 
+      className: 'card', 
+      style: { 
+        padding: '24px', 
+        marginBottom: '24px' 
+      } 
+    },
+      React.createElement('div', { 
+        style: { 
+          display: 'flex', 
+          justifyContent: 'space-between', 
+          alignItems: 'center', 
+          marginBottom: '24px',
+          flexWrap: 'wrap',
+          gap: '16px'
+        } 
+      },
+        React.createElement('h2', { 
+          style: { 
+            fontSize: '20px', 
+            fontWeight: '600',
+            color: 'var(--text)'
+          } 
+        }, 'Recent Appointments'),
+        React.createElement('div', { 
+          style: { 
+            display: 'flex', 
+            alignItems: 'center', 
+            gap: '12px',
+            flexWrap: 'wrap'
+          } 
+        },
+          // Filter Tabs
+          React.createElement('div', { 
+            style: { 
+              display: 'flex', 
+              background: '#f1f5f9', 
+              padding: '4px', 
+              borderRadius: '8px',
+              gap: '4px'
+            } 
           },
-            React.createElement('div', { className: 'card-header' },
-              React.createElement('div', null,
-                React.createElement('div', { className: 'card-title' }, medication.name || 'Unnamed Medication'),
-                React.createElement('div', { className: 'card-subtitle' }, 
-                  patient ? `Patient: ${patient.name}` : 'Patient not found'
-                )
-              ),
-              React.createElement('div', { 
-                className: `status-badge ${getStatusColor(medication.status)}` 
-              }, medication.status || 'active')
-            ),
-            
-            React.createElement('div', { style: { display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px', marginBottom: '12px' } },
-              React.createElement('div', null,
-                React.createElement('div', { style: { fontSize: '12px', color: 'var(--text-light)', marginBottom: '4px' } }, 'Dosage'),
-                React.createElement('div', { style: { fontSize: '14px', fontWeight: '500' } }, medication.dosage || 'Not specified')
-              ),
-              React.createElement('div', null,
-                React.createElement('div', { style: { fontSize: '12px', color: 'var(--text-light)', marginBottom: '4px' } }, 'Frequency'),
-                React.createElement('div', { style: { fontSize: '14px', fontWeight: '500' } }, medication.frequency || 'Not specified')
-              )
-            ),
-            
-            React.createElement('div', { style: { display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px', marginBottom: '12px' } },
-              React.createElement('div', null,
-                React.createElement('div', { style: { fontSize: '12px', color: 'var(--text-light)', marginBottom: '4px' } }, 'Route'),
-                React.createElement('div', { style: { 
-                  padding: '2px 8px', 
-                  backgroundColor: '#f1f5f9', 
+            ['all', 'today', 'scheduled', 'completed'].map(filter => 
+              React.createElement('button', {
+                key: filter,
+                onClick: () => setActiveFilter(filter),
+                style: {
+                  padding: '6px 12px',
+                  border: 'none',
+                  background: activeFilter === filter ? 'white' : 'transparent',
                   borderRadius: '6px',
                   fontSize: '12px',
                   fontWeight: '500',
-                  display: 'inline-block',
-                  textTransform: 'capitalize'
-                } }, medication.route || 'oral')
-              ),
-              React.createElement('div', null,
-                React.createElement('div', { style: { fontSize: '12px', color: 'var(--text-light)', marginBottom: '4px' } }, 'Prescribed By'),
-                React.createElement('div', { style: { fontSize: '14px', fontWeight: '500' } }, medication.prescribed_by || 'Unknown Doctor')
-              )
-            ),
-
-            React.createElement('div', { style: { display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px', marginBottom: '12px' } },
-              React.createElement('div', null,
-                React.createElement('div', { style: { fontSize: '12px', color: 'var(--text-light)', marginBottom: '4px' } }, 'Start Date'),
-                React.createElement('div', { style: { fontSize: '14px', fontWeight: '500' } }, formatDate(medication.start_date))
-              ),
-              React.createElement('div', null,
-                React.createElement('div', { style: { fontSize: '12px', color: 'var(--text-light)', marginBottom: '4px' } }, 'End Date'),
-                React.createElement('div', { style: { fontSize: '14px', fontWeight: '500' } }, formatDate(medication.end_date))
-              )
-            ),
-            
-            medication.instructions && React.createElement('div', { style: { marginBottom: '12px' } },
-              React.createElement('div', { style: { fontSize: '12px', color: 'var(--text-light)', marginBottom: '4px' } }, 'Instructions'),
-              React.createElement('div', { style: { fontSize: '14px', fontStyle: 'italic' } }, medication.instructions)
-            ),
-            
-            React.createElement('div', { style: { display: 'flex', gap: '8px', marginTop: '12px', flexWrap: 'wrap' } },
-              medication.status === 'active' && React.createElement('button', {
-                onClick: () => updateMedicationStatus(medication.id, 'completed'),
-                className: 'btn btn-outline',
-                style: { fontSize: '12px', padding: '6px 12px', color: 'var(--success)', borderColor: 'var(--success)' }
-              }, 'Mark Complete'),
-              
-              medication.status === 'active' && React.createElement('button', {
-                onClick: () => updateMedicationStatus(medication.id, 'discontinued'),
-                className: 'btn btn-outline',
-                style: { fontSize: '12px', padding: '6px 12px', color: 'var(--error)', borderColor: 'var(--error)' }
-              }, 'Discontinue'),
-              
-              React.createElement('button', {
-                onClick: () => alert(`Edit ${medication.name}`),
-                className: 'btn btn-outline',
-                style: { fontSize: '12px', padding: '6px 12px' }
-              }, 'Edit')
+                  color: activeFilter === filter ? 'var(--primary)' : 'var(--text-light)',
+                  cursor: 'pointer',
+                  transition: 'all 0.2s ease',
+                  boxShadow: activeFilter === filter ? 'var(--shadow)' : 'none'
+                }
+              }, filter.charAt(0).toUpperCase() + filter.slice(1))
             )
-          );
-        })
+          ),
+          React.createElement('button', {
+            onClick: () => navigateTo('/appointments'),
+            className: 'btn btn-outline',
+            style: { fontSize: '14px', whiteSpace: 'nowrap' }
+          }, 'View All →')
+        )
+      ),
+
+      loading ? React.createElement('div', { 
+        className: 'loading',
+        style: { padding: '40px' } 
+      }, 'Loading appointments...') :
+      
+      recentAppointments.length === 0 ? 
+        React.createElement('div', { 
+          style: { 
+            textAlign: 'center', 
+            padding: '40px', 
+            color: 'var(--text-light)',
+            backgroundColor: '#f8f9fa',
+            borderRadius: '8px'
+          } 
+        },
+          React.createElement('div', { 
+            style: { 
+              fontSize: '48px', 
+              marginBottom: '16px',
+              opacity: '0.5'
+            } 
+          }, '📅'),
+          React.createElement('h3', { 
+            style: { 
+              marginBottom: '8px', 
+              color: 'var(--text)',
+              fontSize: '18px',
+              fontWeight: '600'
+            } 
+          }, 'No upcoming appointments'),
+          React.createElement('p', { 
+            style: { 
+              marginBottom: '20px',
+              maxWidth: '300px',
+              margin: '0 auto 20px auto'
+            } 
+          }, 'Schedule your first appointment to get started'),
+          React.createElement('button', {
+            onClick: () => navigateTo('/appointments'),
+            className: 'btn btn-primary'
+          }, 'Schedule Appointment')
+        ) :
+        React.createElement('div', { 
+          className: 'grid-container',
+          style: {
+            gridTemplateColumns: 'repeat(auto-fill, minmax(320px, 1fr))'
+          }
+        },
+          recentAppointments.slice(0, 6).map(appointment => {
+            const appointmentDate = new Date(appointment.appointment_date);
+            const isToday = appointmentDate.toDateString() === new Date().toDateString();
+            
+            return React.createElement('div', { 
+              key: appointment.id,
+              className: 'card appointment-card',
+              style: { 
+                cursor: 'pointer',
+                borderLeft: isToday ? '4px solid var(--success)' : '4px solid transparent',
+                transition: 'all 0.2s ease'
+              },
+              onClick: () => handleAppointmentClick(appointment),
+              onMouseEnter: (e) => {
+                e.currentTarget.style.transform = 'translateY(-2px)';
+                e.currentTarget.style.boxShadow = 'var(--shadow-lg)';
+              },
+              onMouseLeave: (e) => {
+                e.currentTarget.style.transform = 'translateY(0)';
+                e.currentTarget.style.boxShadow = 'var(--shadow)';
+              }
+            },
+              React.createElement('div', { className: 'card-header' },
+                React.createElement('div', null,
+                  React.createElement('div', { 
+                    className: 'card-title',
+                    style: { marginBottom: '4px' }
+                  }, appointment.patient_name || 'Unknown Patient'),
+                  React.createElement('div', { className: 'card-subtitle' }, 
+                    `Dr. ${appointment.doctor_name || 'Unknown Doctor'} • ${isToday ? 'Today' : appointmentDate.toLocaleDateString()}`
+                  )
+                ),
+                React.createElement('div', { 
+                  className: `status-badge status-${appointment.status || 'scheduled'}`,
+                  style: { fontSize: '11px' }
+                }, appointment.status || 'scheduled')
+              ),
+              React.createElement('div', { 
+                style: { 
+                  display: 'flex', 
+                  justifyContent: 'space-between', 
+                  alignItems: 'center', 
+                  marginTop: '12px' 
+                } 
+              },
+                React.createElement('span', { 
+                  style: { 
+                    color: 'var(--text)', 
+                    fontSize: '14px', 
+                    fontWeight: '600' 
+                  } 
+                },
+                  appointmentDate.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
+                ),
+                React.createElement('span', { 
+                  style: { 
+                    padding: '4px 8px', 
+                    backgroundColor: '#f1f5f9', 
+                    borderRadius: '6px',
+                    fontSize: '12px',
+                    fontWeight: '500',
+                    color: 'var(--text-light)',
+                    textTransform: 'capitalize'
+                  } 
+                }, appointment.type || 'consultation')
+              )
+            );
+          })
+        )
+    ),
+
+    // Enhanced Quick Actions
+    React.createElement('div', { 
+      className: 'card', 
+      style: { 
+        padding: '24px' 
+      } 
+    },
+      React.createElement('h2', { 
+        style: { 
+          fontSize: '20px', 
+          fontWeight: '600', 
+          marginBottom: '20px',
+          color: 'var(--text)'
+        } 
+      }, 'Quick Actions'),
+      React.createElement('div', { 
+        style: { 
+          display: 'grid', 
+          gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', 
+          gap: '16px' 
+        } 
+      },
+        React.createElement('button', {
+          onClick: () => navigateTo('/patients'),
+          className: 'btn btn-primary',
+          style: { 
+            flexDirection: 'column', 
+            height: '100px', 
+            fontSize: '14px',
+            gap: '12px'
+          }
+        }, 
+          React.createElement('div', { 
+            style: { 
+              fontSize: '28px', 
+              marginBottom: '4px' 
+            } 
+          }, '👥'),
+          'Manage Patients'
+        ),
+        React.createElement('button', {
+          onClick: () => navigateTo('/appointments'),
+          className: 'btn btn-primary',
+          style: { 
+            flexDirection: 'column', 
+            height: '100px', 
+            fontSize: '14px',
+            gap: '12px'
+          }
+        },
+          React.createElement('div', { 
+            style: { 
+              fontSize: '28px', 
+              marginBottom: '4px' 
+            } 
+          }, '📅'),
+          'Schedule Appointment'
+        ),
+        React.createElement('button', {
+          onClick: () => navigateTo('/reports'),
+          className: 'btn btn-outline',
+          style: { 
+            flexDirection: 'column', 
+            height: '100px', 
+            fontSize: '14px',
+            gap: '12px'
+          }
+        },
+          React.createElement('div', { 
+            style: { 
+              fontSize: '28px', 
+              marginBottom: '4px' 
+            } 
+          }, '📊'),
+          'View Reports'
+        ),
+        React.createElement('button', {
+          onClick: () => navigateTo('/medications'),
+          className: 'btn btn-outline',
+          style: { 
+            flexDirection: 'column', 
+            height: '100px', 
+            fontSize: '14px',
+            gap: '12px'
+          }
+        },
+          React.createElement('div', { 
+            style: { 
+              fontSize: '28px', 
+              marginBottom: '4px' 
+            } 
+          }, '💊'),
+          'Medications'
+        )
       )
+    )
   );
 }
