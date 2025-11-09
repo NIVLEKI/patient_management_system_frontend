@@ -8,8 +8,6 @@ import Appointments from './pages/Appointments';
 import Profile from './pages/Profile';
 import Reports from './pages/Reports';
 import Medications from './pages/medication';
-import AdminLogin from './pages/AdminLogin';
-import AdminDashboard from './pages/AdminDashboard';
 
 function Loading() {
   return React.createElement('div', { className: 'loading' },
@@ -30,17 +28,6 @@ function PublicRoute({ children }) {
   
   if (loading) return React.createElement(Loading);
   return !user ? children : React.createElement(Navigate, { to: '/dashboard' });
-}
-
-function AdminRoute({ children }) {
-  const adminUser = JSON.parse(localStorage.getItem('adminUser') || 'null');
-  const adminToken = localStorage.getItem('adminToken');
-  
-  if (!adminUser || !adminToken) {
-    return React.createElement(Navigate, { to: '/admin-login' });
-  }
-  
-  return children;
 }
 
 function Navigation() {
@@ -173,14 +160,6 @@ function AppContent() {
         React.createElement(Route, { 
           path: '/login', 
           element: React.createElement(PublicRoute, null, React.createElement(Login))
-        }),
-        React.createElement(Route, { 
-          path: '/admin-login', 
-          element: React.createElement(AdminLogin)
-        }),
-        React.createElement(Route, { 
-          path: '/admin-dashboard', 
-          element: React.createElement(AdminRoute, null, React.createElement(AdminDashboard))
         }),
         React.createElement(Route, { 
           path: '/dashboard', 

@@ -1,6 +1,5 @@
 import React, { useState } from 'react';
 import { useAuth } from '../contexts/AuthContext';
-import { Link } from 'react-router-dom';
 
 export default function Login() {
   const [email, setEmail] = useState('');
@@ -140,32 +139,9 @@ export default function Login() {
         onClick: handleDemoLogin,
         className: 'btn btn-success',
         disabled: isLoading,
-        style: { width: '100%', marginBottom: '16px' }
+        style: { width: '100%', marginBottom: '24px' }
       }, 
         isLoading ? 'Loading...' : 'Quick Demo Login'
-      ),
-
-      // Add this admin link section
-      React.createElement('div', { 
-        style: { 
-          textAlign: 'center', 
-          marginBottom: '24px',
-          padding: '16px',
-          backgroundColor: '#f8fafc',
-          borderRadius: '8px',
-          border: '1px solid #e2e8f0'
-        } 
-      },
-        React.createElement(Link, {
-          to: '/admin-login',
-          style: {
-            color: 'var(--primary)',
-            textDecoration: 'none',
-            fontWeight: '600',
-            fontSize: '14px',
-            display: 'block'
-          }
-        }, '🔐 Are you an admin? Click here to access admin panel')
       ),
 
       React.createElement('div', { style: { textAlign: 'center' } },
