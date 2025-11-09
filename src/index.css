@@ -463,8 +463,15 @@ h1, h2, h3, h4, h5, h6 {
   display: flex;
   gap: 8px;
   align-items: center;
+  overflow-x: auto;
+  overflow-y: hidden;
+  scrollbar-width: none; /* Firefox */
+  -ms-overflow-style: none; /* IE and Edge */
+  padding: 8px 0;
 }
-
+.nav-links::-webkit-scrollbar {
+  display: none; /* Chrome, Safari and Opera */
+}
 .nav-link {
   color: var(--text-light);
   text-decoration: none;
@@ -474,7 +481,9 @@ h1, h2, h3, h4, h5, h6 {
   border-radius: 8px;
   transition: all 0.2s ease;
   white-space: nowrap;
+  flex-shrink: 0; /* Prevent links from shrinking */
 }
+
 
 .nav-link:hover {
   color: var(--primary);
