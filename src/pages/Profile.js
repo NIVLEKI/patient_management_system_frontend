@@ -83,8 +83,6 @@ export default function Profile() {
 
       const data = await response.json();
       
-      // Update user in context (we'll need to modify AuthContext for this)
-      // For now, show success message and clear password fields
       setSuccess('Profile updated successfully!');
       
       // Clear password fields
@@ -95,12 +93,6 @@ export default function Profile() {
         confirmPassword: ''
       }));
 
-      // Show success message for a while before refreshing
-      setTimeout(() => {
-        const { navigate } = useNavigate();
-        navigate('/profile'); // Or just remove the reload
-      }, 2000);
-      
     } catch (err) {
       setError(err.message);
     } finally {
@@ -145,239 +137,497 @@ export default function Profile() {
   };
 
   if (!user) {
-    return React.createElement('div', { className: 'loading' }, 'Please login to view profile');
+    return (
+      <div className="loading">
+        <div className="loading-spinner"></div>
+        <p>Please login to view profile</p>
+      </div>
+    );
   }
 
-  return React.createElement('div', { style: { maxWidth: '800px', margin: '0 auto', padding: '24px' } },
-    // Header
-    React.createElement('div', { style: { marginBottom: '32px' } },
-      React.createElement('h1', { 
-        style: { 
-          fontSize: '32px',
-          fontWeight: '700',
-          color: 'var(--text)',
-          marginBottom: '8px'
-        } 
-      }, 'My Profile'),
-      React.createElement('p', { 
-        style: { 
-          color: 'var(--text-light)',
-          fontSize: '16px'
-        } 
-      }, 'Manage your account settings and preferences')
-    ),
+  return (
+    <div className="page-container">
+      {/* Header */}
+      <div className="profile-header">
+        <h1 className="profile-title">My Profile</h1>
+        <p className="profile-subtitle">Manage your account settings and preferences</p>
+      </div>
 
-    React.createElement('div', { style: { display: 'grid', gridTemplateColumns: '1fr 2fr', gap: '32px', alignItems: 'start' } },
-      // Profile Summary Card
-      React.createElement('div', { className: 'card', style: { padding: '24px', height: 'fit-content' } },
-        React.createElement('div', { style: { textAlign: 'center', marginBottom: '24px' } },
-          React.createElement('div', { 
-            style: { 
-              width: '80px',
-              height: '80px',
-              borderRadius: '50%',
-              backgroundColor: 'var(--primary)',
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'center',
-              fontSize: '24px',
-              color: 'white',
-              margin: '0 auto 16px auto',
-              fontWeight: '600'
-            } 
-          }, getInitials(user.name)),
-          React.createElement('h2', { style: { fontSize: '20px', fontWeight: '600', marginBottom: '4px' } }, user.name || 'User'),
-          React.createElement('p', { style: { color: 'var(--text-light)', fontSize: '14px', marginBottom: '8px' } }, user.email || 'No email'),
-          React.createElement('div', { 
-            style: { 
-              padding: '4px 12px',
-              backgroundColor: '#f0fdf4',
-              color: '#166534',
-              borderRadius: '20px',
-              fontSize: '12px',
-              fontWeight: '500',
-              display: 'inline-block'
-            } 
-          }, formatRole(user.role))
-        ),
+      <div className="profile-layout">
+        {/* Profile Summary Card */}
+        <div className="card profile-summary">
+          <div className="profile-avatar-section">
+            <div className="profile-avatar">
+              {getInitials(user.name)}
+            </div>
+            <h2 className="profile-name">{user.name || 'User'}</h2>
+            <p className="profile-email">{user.email || 'No email'}</p>
+            <div className="role-badge">
+              {formatRole(user.role)}
+            </div>
+          </div>
 
-        React.createElement('div', { style: { borderTop: '1px solid var(--border)', paddingTop: '20px' } },
-          React.createElement('div', { style: { display: 'flex', justifyContent: 'space-between', marginBottom: '12px' } },
-            React.createElement('span', { style: { color: 'var(--text-light)', fontSize: '14px' } }, 'Member since'),
-            React.createElement('span', { style: { fontWeight: '500', fontSize: '14px' } }, 
-              formatDate(user.created_at)
-            )
-          ),
-          React.createElement('div', { style: { display: 'flex', justifyContent: 'space-between', marginBottom: '12px' } },
-            React.createElement('span', { style: { color: 'var(--text-light)', fontSize: '14px' } }, 'User ID'),
-            React.createElement('span', { style: { fontWeight: '500', fontSize: '14px', fontFamily: 'monospace' } }, 
-              user.id || 'N/A'
-            )
-          ),
-          React.createElement('div', { style: { display: 'flex', justifyContent: 'space-between' } },
-            React.createElement('span', { style: { color: 'var(--text-light)', fontSize: '14px' } }, 'Last login'),
-            React.createElement('span', { style: { fontWeight: '500', fontSize: '14px' } }, 
-              'Just now'
-            )
-          )
-        )
-      ),
+          <div className="profile-details">
+            <div className="detail-item">
+              <span className="detail-label">Member since</span>
+              <span className="detail-value">{formatDate(user.created_at)}</span>
+            </div>
+            <div className="detail-item">
+              <span className="detail-label">User ID</span>
+              <span className="detail-value user-id">{user.id || 'N/A'}</span>
+            </div>
+            <div className="detail-item">
+              <span className="detail-label">Last login</span>
+              <span className="detail-value">Just now</span>
+            </div>
+          </div>
+        </div>
 
-      // Profile Edit Form
-      React.createElement('div', { className: 'card', style: { padding: '32px' } },
-        React.createElement('div', { style: { display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '24px' } },
-          React.createElement('h2', { style: { fontSize: '20px', fontWeight: '600' } }, 'Edit Profile'),
-          React.createElement('button', {
-            onClick: resetForm,
-            className: 'btn btn-outline',
-            style: { fontSize: '12px', padding: '6px 12px' },
-            disabled: loading
-          }, 'Reset Form')
-        ),
+        {/* Profile Edit Form */}
+        <div className="card profile-form">
+          <div className="form-header">
+            <h2 className="form-title">Edit Profile</h2>
+            <button
+              onClick={resetForm}
+              className="btn btn-outline reset-btn"
+              disabled={loading}
+            >
+              Reset Form
+            </button>
+          </div>
 
-        error && React.createElement('div', { className: 'alert alert-error' }, error),
-        success && React.createElement('div', { className: 'alert alert-success' }, success),
+          {error && (
+            <div className="alert alert-error fade-in">
+              <span>⚠️</span>
+              {error}
+            </div>
+          )}
+          
+          {success && (
+            <div className="alert alert-success fade-in">
+              <span>✅</span>
+              {success}
+            </div>
+          )}
 
-        React.createElement('form', { onSubmit: updateProfile },
-          // Personal Information Section
-          React.createElement('div', { style: { marginBottom: '32px' } },
-            React.createElement('h3', { 
-              style: { 
-                fontSize: '16px',
-                fontWeight: '600',
-                color: 'var(--text)',
-                marginBottom: '16px',
-                paddingBottom: '8px',
-                borderBottom: '1px solid var(--border)'
-              } 
-            }, 'Personal Information'),
+          <form onSubmit={updateProfile}>
+            {/* Personal Information Section */}
+            <div className="form-section">
+              <h3 className="section-title">Personal Information</h3>
 
-            React.createElement('div', { className: 'form-group' },
-              React.createElement('label', { className: 'form-label' }, 'Full Name *'),
-              React.createElement('input', {
-                type: 'text',
-                className: 'form-input',
-                placeholder: 'Enter your full name',
-                value: profileData.name,
-                onChange: (e) => handleInputChange('name', e.target.value),
-                required: true,
-                disabled: loading
-              })
-            ),
+              <div className="form-group">
+                <label className="form-label">Full Name *</label>
+                <input
+                  type="text"
+                  className="form-input"
+                  placeholder="Enter your full name"
+                  value={profileData.name}
+                  onChange={(e) => handleInputChange('name', e.target.value)}
+                  required
+                  disabled={loading}
+                />
+              </div>
 
-            React.createElement('div', { className: 'form-group' },
-              React.createElement('label', { className: 'form-label' }, 'Email Address *'),
-              React.createElement('input', {
-                type: 'email',
-                className: 'form-input',
-                placeholder: 'Enter your email address',
-                value: profileData.email,
-                onChange: (e) => handleInputChange('email', e.target.value),
-                required: true,
-                disabled: loading
-              })
-            )
-          ),
+              <div className="form-group">
+                <label className="form-label">Email Address *</label>
+                <input
+                  type="email"
+                  className="form-input"
+                  placeholder="Enter your email address"
+                  value={profileData.email}
+                  onChange={(e) => handleInputChange('email', e.target.value)}
+                  required
+                  disabled={loading}
+                />
+              </div>
+            </div>
 
-          // Password Change Section
-          React.createElement('div', { style: { marginBottom: '32px' } },
-            React.createElement('h3', { 
-              style: { 
-                fontSize: '16px',
-                fontWeight: '600',
-                color: 'var(--text)',
-                marginBottom: '16px',
-                paddingBottom: '8px',
-                borderBottom: '1px solid var(--border)'
-              } 
-            }, 'Change Password'),
-            React.createElement('p', { 
-              style: { 
-                color: 'var(--text-light)',
-                fontSize: '14px',
-                marginBottom: '16px'
-              } 
-            }, 'Leave password fields blank if you don\'t want to change your password.'),
+            {/* Password Change Section */}
+            <div className="form-section">
+              <h3 className="section-title">Change Password</h3>
+              <p className="section-description">
+                Leave password fields blank if you don't want to change your password.
+              </p>
 
-            React.createElement('div', { className: 'form-group' },
-              React.createElement('label', { className: 'form-label' }, 'Current Password'),
-              React.createElement('input', {
-                type: 'password',
-                className: 'form-input',
-                placeholder: 'Enter current password',
-                value: profileData.currentPassword,
-                onChange: (e) => handleInputChange('currentPassword', e.target.value),
-                disabled: loading
-              })
-            ),
+              <div className="form-group">
+                <label className="form-label">Current Password</label>
+                <input
+                  type="password"
+                  className="form-input"
+                  placeholder="Enter current password"
+                  value={profileData.currentPassword}
+                  onChange={(e) => handleInputChange('currentPassword', e.target.value)}
+                  disabled={loading}
+                />
+              </div>
 
-            React.createElement('div', { className: 'form-group' },
-              React.createElement('label', { className: 'form-label' }, 'New Password'),
-              React.createElement('input', {
-                type: 'password',
-                className: 'form-input',
-                placeholder: 'Enter new password (min. 8 characters)',
-                value: profileData.newPassword,
-                onChange: (e) => handleInputChange('newPassword', e.target.value),
-                disabled: loading,
-                minLength: 8
-              })
-            ),
+              <div className="form-group">
+                <label className="form-label">New Password</label>
+                <input
+                  type="password"
+                  className="form-input"
+                  placeholder="Enter new password (min. 8 characters)"
+                  value={profileData.newPassword}
+                  onChange={(e) => handleInputChange('newPassword', e.target.value)}
+                  disabled={loading}
+                  minLength={8}
+                />
+              </div>
 
-            React.createElement('div', { className: 'form-group' },
-              React.createElement('label', { className: 'form-label' }, 'Confirm New Password'),
-              React.createElement('input', {
-                type: 'password',
-                className: 'form-input',
-                placeholder: 'Confirm new password',
-                value: profileData.confirmPassword,
-                onChange: (e) => handleInputChange('confirmPassword', e.target.value),
-                disabled: loading
-              })
-            )
-          ),
+              <div className="form-group">
+                <label className="form-label">Confirm New Password</label>
+                <input
+                  type="password"
+                  className="form-input"
+                  placeholder="Confirm new password"
+                  value={profileData.confirmPassword}
+                  onChange={(e) => handleInputChange('confirmPassword', e.target.value)}
+                  disabled={loading}
+                />
+              </div>
+            </div>
 
-          // Action Buttons
-          React.createElement('div', { style: { display: 'flex', gap: '12px', justifyContent: 'space-between', alignItems: 'center' } },
-            React.createElement('button', {
-              type: 'button',
-              className: 'btn btn-outline',
-              onClick: logout,
-              disabled: loading,
-              style: { color: 'var(--error)', borderColor: 'var(--error)' }
-            }, 'Logout'),
-            
-            React.createElement('div', { style: { display: 'flex', gap: '12px' } },
-              React.createElement('button', {
-                type: 'button',
-                className: 'btn btn-outline',
-                onClick: resetForm,
-                disabled: loading
-              }, 'Cancel'),
-              React.createElement('button', {
-                type: 'submit',
-                className: 'btn btn-primary',
-                disabled: loading
-              }, loading ? 
-                React.createElement('div', { style: { display: 'flex', alignItems: 'center', gap: '8px' } },
-                  React.createElement('div', { 
-                    style: {
-                      width: '16px',
-                      height: '16px',
-                      border: '2px solid transparent',
-                      borderTop: '2px solid currentColor',
-                      borderRadius: '50%',
-                      animation: 'spin 1s linear infinite'
-                    } 
-                  }),
-                  'Updating...'
-                ) : 
-                'Update Profile'
-              )
-            )
-          )
-        )
-      )
-    )
+            {/* Action Buttons */}
+            <div className="form-actions">
+              <button
+                type="button"
+                className="btn btn-outline logout-btn"
+                onClick={logout}
+                disabled={loading}
+              >
+                🚪 Logout
+              </button>
+              
+              <div className="action-buttons">
+                <button
+                  type="button"
+                  className="btn btn-outline"
+                  onClick={resetForm}
+                  disabled={loading}
+                >
+                  Cancel
+                </button>
+                <button
+                  type="submit"
+                  className="btn btn-primary"
+                  disabled={loading}
+                >
+                  {loading ? (
+                    <div className="loading-button">
+                      <div className="loading-spinner-small"></div>
+                      Updating...
+                    </div>
+                  ) : (
+                    'Update Profile'
+                  )}
+                </button>
+              </div>
+            </div>
+          </form>
+        </div>
+      </div>
+
+      <style jsx>{`
+        .page-container {
+          max-width: 1200px;
+          margin: 0 auto;
+          padding: 24px;
+        }
+
+        .profile-header {
+          margin-bottom: 32px;
+          text-align: center;
+        }
+
+        .profile-title {
+          font-size: clamp(28px, 4vw, 36px);
+          font-weight: 700;
+          color: var(--text);
+          margin-bottom: 8px;
+          background: linear-gradient(135deg, var(--text) 0%, var(--text-light) 100%);
+          -webkit-background-clip: text;
+          -webkit-text-fill-color: transparent;
+        }
+
+        .profile-subtitle {
+          color: var(--text-light);
+          font-size: 16px;
+          max-width: 500px;
+          margin: 0 auto;
+        }
+
+        .profile-layout {
+          display: grid;
+          grid-template-columns: 1fr 2fr;
+          gap: 32px;
+          align-items: start;
+        }
+
+        /* Profile Summary Styles */
+        .profile-summary {
+          padding: 32px;
+          height: fit-content;
+          position: sticky;
+          top: 100px;
+        }
+
+        .profile-avatar-section {
+          text-align: center;
+          margin-bottom: 24px;
+        }
+
+        .profile-avatar {
+          width: 100px;
+          height: 100px;
+          border-radius: 50%;
+          background: linear-gradient(135deg, var(--primary), var(--primary-dark));
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          font-size: 32px;
+          color: white;
+          margin: 0 auto 20px auto;
+          font-weight: 600;
+          box-shadow: var(--shadow-lg);
+        }
+
+        .profile-name {
+          font-size: 20px;
+          font-weight: 600;
+          margin-bottom: 4px;
+          color: var(--text);
+        }
+
+        .profile-email {
+          color: var(--text-light);
+          font-size: 14px;
+          margin-bottom: 12px;
+        }
+
+        .role-badge {
+          padding: 6px 16px;
+          background: linear-gradient(135deg, #10b981, #059669);
+          color: white;
+          border-radius: 20px;
+          font-size: 12px;
+          font-weight: 600;
+          display: inline-block;
+          box-shadow: var(--shadow);
+        }
+
+        .profile-details {
+          border-top: 1px solid var(--border);
+          padding-top: 24px;
+        }
+
+        .detail-item {
+          display: flex;
+          justify-content: space-between;
+          align-items: center;
+          margin-bottom: 16px;
+          padding: 12px 0;
+        }
+
+        .detail-item:not(:last-child) {
+          border-bottom: 1px solid #f1f5f9;
+        }
+
+        .detail-label {
+          color: var(--text-light);
+          font-size: 14px;
+          font-weight: 500;
+        }
+
+        .detail-value {
+          font-weight: 600;
+          font-size: 14px;
+          color: var(--text);
+        }
+
+        .user-id {
+          font-family: 'Monaco', 'Consolas', monospace;
+          background: #f8fafc;
+          padding: 4px 8px;
+          border-radius: 6px;
+          font-size: 12px;
+        }
+
+        /* Profile Form Styles */
+        .profile-form {
+          padding: 32px;
+        }
+
+        .form-header {
+          display: flex;
+          justify-content: space-between;
+          align-items: center;
+          margin-bottom: 24px;
+          flex-wrap: wrap;
+          gap: 16px;
+        }
+
+        .form-title {
+          font-size: 24px;
+          font-weight: 600;
+          color: var(--text);
+          margin: 0;
+        }
+
+        .reset-btn {
+          font-size: 14px;
+          padding: 8px 16px;
+        }
+
+        .form-section {
+          margin-bottom: 32px;
+        }
+
+        .section-title {
+          font-size: 18px;
+          font-weight: 600;
+          color: var(--text);
+          margin-bottom: 16px;
+          padding-bottom: 12px;
+          border-bottom: 2px solid var(--border);
+        }
+
+        .section-description {
+          color: var(--text-light);
+          font-size: 14px;
+          margin-bottom: 20px;
+          line-height: 1.5;
+        }
+
+        .form-actions {
+          display: flex;
+          justify-content: space-between;
+          align-items: center;
+          gap: 16px;
+          flex-wrap: wrap;
+          padding-top: 24px;
+          border-top: 1px solid var(--border);
+        }
+
+        .logout-btn {
+          color: var(--error);
+          border-color: var(--error);
+          padding: 10px 20px;
+        }
+
+        .logout-btn:hover {
+          background: var(--error);
+          color: white;
+        }
+
+        .action-buttons {
+          display: flex;
+          gap: 12px;
+          flex-wrap: wrap;
+        }
+
+        .loading-button {
+          display: flex;
+          align-items: center;
+          gap: 8px;
+        }
+
+        .loading-spinner-small {
+          width: 16px;
+          height: 16px;
+          border: 2px solid transparent;
+          border-top: 2px solid currentColor;
+          border-radius: 50%;
+          animation: spin 1s linear infinite;
+        }
+
+        /* Responsive Design */
+        @media (max-width: 968px) {
+          .profile-layout {
+            grid-template-columns: 1fr;
+            gap: 24px;
+          }
+
+          .profile-summary {
+            position: static;
+          }
+
+          .form-header {
+            flex-direction: column;
+            align-items: stretch;
+          }
+
+          .reset-btn {
+            align-self: flex-end;
+          }
+        }
+
+        @media (max-width: 640px) {
+          .page-container {
+            padding: 16px;
+          }
+
+          .profile-summary,
+          .profile-form {
+            padding: 24px;
+          }
+
+          .profile-avatar {
+            width: 80px;
+            height: 80px;
+            font-size: 24px;
+          }
+
+          .form-actions {
+            flex-direction: column;
+            align-items: stretch;
+          }
+
+          .action-buttons {
+            justify-content: space-between;
+          }
+
+          .logout-btn {
+            order: 2;
+          }
+        }
+
+        @media (max-width: 480px) {
+          .profile-summary,
+          .profile-form {
+            padding: 20px;
+          }
+
+          .action-buttons {
+            flex-direction: column;
+          }
+
+          .detail-item {
+            flex-direction: column;
+            align-items: flex-start;
+            gap: 4px;
+          }
+        }
+
+        @keyframes spin {
+          0% { transform: rotate(0deg); }
+          100% { transform: rotate(360deg); }
+        }
+
+        .fade-in {
+          animation: fadeIn 0.3s ease-out;
+        }
+
+        @keyframes fadeIn {
+          from {
+            opacity: 0;
+            transform: translateY(-10px);
+          }
+          to {
+            opacity: 1;
+            transform: translateY(0);
+          }
+        }
+      `}</style>
+    </div>
   );
 }
