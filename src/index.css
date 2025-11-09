@@ -809,3 +809,240 @@ h2 {
     display: none;
   }
 }
+/* Mobile Menu Styles */
+.mobile-menu-btn {
+  display: none;
+  background: none;
+  border: none;
+  font-size: 24px;
+  cursor: pointer;
+  padding: 8px;
+  color: var(--text);
+  border-radius: 8px;
+  transition: all 0.3s ease;
+}
+
+.mobile-menu-btn:hover {
+  background: rgba(37, 99, 235, 0.1);
+  color: var(--primary);
+}
+
+.mobile-menu-overlay {
+  position: fixed;
+  top: 72px;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0, 0, 0, 0.5);
+  z-index: 999;
+  animation: fadeIn 0.3s ease;
+}
+
+.mobile-menu {
+  position: fixed;
+  top: 72px;
+  left: -100%;
+  width: 320px;
+  height: calc(100vh - 72px);
+  background: var(--surface);
+  box-shadow: var(--shadow-xl);
+  transition: left 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  z-index: 1000;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+
+.mobile-menu-open {
+  left: 0;
+}
+
+.mobile-menu-header {
+  padding: 24px;
+  border-bottom: 1px solid var(--border);
+  background: linear-gradient(135deg, #f8fafc, #f1f5f9);
+}
+
+.mobile-user-info {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+}
+
+.mobile-user-details {
+  flex: 1;
+}
+
+.mobile-nav-links {
+  flex: 1;
+  padding: 16px 0;
+  overflow-y: auto;
+}
+
+.mobile-nav-link {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  padding: 18px 24px;
+  color: var(--text);
+  text-decoration: none;
+  font-weight: 500;
+  border-bottom: 1px solid var(--border);
+  transition: all 0.3s ease;
+  position: relative;
+}
+
+.mobile-nav-link:hover {
+  background: #f8fafc;
+  color: var(--primary);
+  transform: translateX(8px);
+}
+
+.mobile-nav-link-active {
+  color: var(--primary);
+  background: rgba(37, 99, 235, 0.05);
+  font-weight: 600;
+}
+
+.mobile-nav-link-active::before {
+  content: '';
+  position: absolute;
+  left: 0;
+  top: 0;
+  bottom: 0;
+  width: 4px;
+  background: var(--primary);
+}
+
+.nav-link-icon {
+  font-size: 20px;
+  width: 24px;
+  text-align: center;
+}
+
+.nav-link-text {
+  flex: 1;
+}
+
+.active-indicator {
+  color: var(--primary);
+  font-weight: bold;
+  font-size: 20px;
+}
+
+.mobile-menu-footer {
+  padding: 20px;
+  border-top: 1px solid var(--border);
+  background: #f8fafc;
+}
+
+.mobile-logout-btn {
+  border: 2px solid var(--error);
+  color: var(--error);
+}
+
+.mobile-logout-btn:hover {
+  background: var(--error);
+  color: white;
+}
+
+/* Navigation layout sections */
+.nav-section {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+}
+
+.nav-user-section {
+  gap: 12px;
+}
+
+/* Profile link in desktop nav */
+.profile-link {
+  white-space: nowrap;
+}
+
+/* Hide desktop user info and show mobile menu button on smaller screens */
+@media (max-width: 968px) {
+  .desktop-nav {
+    display: none !important;
+  }
+  
+  .desktop-user,
+  .desktop-profile,
+  .desktop-logout {
+    display: none !important;
+  }
+  
+  .mobile-menu-btn {
+    display: flex !important;
+    align-items: center;
+    justify-content: center;
+  }
+  
+  .nav-links {
+    display: none;
+  }
+}
+
+/* Adjust mobile menu for smaller screens */
+@media (max-width: 640px) {
+  .mobile-menu {
+    width: 100%;
+    top: 68px;
+    height: calc(100vh - 68px);
+  }
+  
+  .mobile-menu-overlay {
+    top: 68px;
+  }
+  
+  .mobile-menu-header {
+    padding: 20px;
+  }
+  
+  .mobile-nav-link {
+    padding: 16px 20px;
+  }
+}
+
+@media (max-width: 480px) {
+  .mobile-menu {
+    top: 64px;
+    height: calc(100vh - 64px);
+  }
+  
+  .mobile-menu-overlay {
+    top: 64px;
+  }
+  
+  .mobile-user-info {
+    gap: 12px;
+  }
+  
+  .user-avatar {
+    width: 40px !important;
+    height: 40px !important;
+    font-size: 16px !important;
+  }
+}
+
+/* Ensure smooth animations */
+@keyframes fadeIn {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+/* Scrollbar styling for mobile menu */
+.mobile-nav-links::-webkit-scrollbar {
+  width: 4px;
+}
+
+.mobile-nav-links::-webkit-scrollbar-track {
+  background: #f1f5f9;
+}
+
+.mobile-nav-links::-webkit-scrollbar-thumb {
+  background: var(--primary);
+  border-radius: 2px;
+}

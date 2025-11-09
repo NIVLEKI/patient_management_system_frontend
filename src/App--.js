@@ -6,7 +6,6 @@ import Dashboard from './pages/Dashboard';
 import Patients from './pages/Patients';
 import Appointments from './pages/Appointments';
 import Profile from './pages/Profile';
-// IMPORT THE NEW PAGES HERE
 import Reports from './pages/Reports';
 import Medications from './pages/medication';
 
@@ -68,7 +67,6 @@ function Navigation() {
             to: '/appointments', 
             className: `nav-link ${isActive('/appointments') ? 'active' : ''}`
           }, 'Appointments'),
-          // ADDED NEW LINKS TO NAVIGATION BAR
           React.createElement(Link, { 
             to: '/reports', 
             className: `nav-link ${isActive('/reports') ? 'active' : ''}`
@@ -102,9 +100,9 @@ function Navigation() {
 }
 
 function AppContent() {
-  return React.createElement('div', null,
+  return React.createElement('div', { className: 'app-layout' },
     React.createElement(Navigation),
-    React.createElement('main', null,
+    React.createElement('main', { className: 'main-content' },
       React.createElement(Routes, null,
         React.createElement(Route, { 
           path: '/login', 
@@ -122,7 +120,6 @@ function AppContent() {
           path: '/appointments', 
           element: React.createElement(ProtectedRoute, null, React.createElement(Appointments))
         }),
-        // ADDED NEW ROUTES HERE
         React.createElement(Route, { 
           path: '/reports', 
           element: React.createElement(ProtectedRoute, null, React.createElement(Reports))
