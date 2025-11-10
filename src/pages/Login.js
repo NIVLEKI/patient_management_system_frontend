@@ -55,7 +55,7 @@ export default function Login() {
             color: 'var(--text)',
             marginBottom: '8px'
           } 
-        }, 'Patient Management System'),
+        }, 'Nivlek Hospital Patient Management System'),
         React.createElement('p', { 
           style: { 
             color: 'var(--text-light)',
