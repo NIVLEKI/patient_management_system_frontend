@@ -9,7 +9,7 @@ export default function Login() {
   const [isLogin, setIsLogin] = useState(true);
   const [isLoading, setIsLoading] = useState(false);
   
-  const { login, register, demoLogin, error, clearError } = useAuth();
+  const { login, register, error, clearError } = useAuth(); // Removed demoLogin
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -22,19 +22,6 @@ export default function Login() {
       } else {
         await register({ name, email, password });
       }
-    } catch (err) {
-      // Error handled in context
-    } finally {
-      setIsLoading(false);
-    }
-  };
-
-  const handleDemoLogin = async () => {
-    setIsLoading(true);
-    clearError();
-    
-    try {
-      await demoLogin();
     } catch (err) {
       // Error handled in context
     } finally {
@@ -135,17 +122,8 @@ export default function Login() {
             : (isLogin ? 'Sign In' : 'Create Account')
         )
       ),
-      
-      React.createElement('button', {
-        onClick: handleDemoLogin,
-        className: 'btn btn-success',
-        disabled: isLoading,
-        style: { width: '100%', marginBottom: '16px' }
-      }, 
-        isLoading ? 'Loading...' : 'Quick Demo Login'
-      ),
 
-      // Add this admin link section
+      // Admin link section
       React.createElement('div', { 
         style: { 
           textAlign: 'center', 
