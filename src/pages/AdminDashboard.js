@@ -60,54 +60,71 @@ export default function AdminDashboard() {
     }
   };
 
-  const fetchAdminData = async (endpoint) => {
-    try {
-      setLoading(true);
-      setError('');
-      
-      const response = await fetch(`${API_BASE_URL}${endpoint}`, {
-        headers: {
-          'Authorization': `Bearer ${adminToken}`
-        }
-      });
-
-      if (response.ok) {
-        const data = await response.json();
-        setBackendReady(true);
-        return data;
-      } else {
-        // If backend not ready, return mock data
-        const endpointKey = endpoint.replace('/admin/', '');
-        return mockData[endpointKey] || {};
+ const fetchAdminData = async (endpoint) => {
+  try {
+    setLoading(true);
+    setError('');
+    
+    const response = await fetch(`${API_BASE_URL}${endpoint}`, {
+      headers: {
+        'Authorization': `Bearer ${adminToken}`
       }
-    } catch (err) {
-      // Return mock data if backend is not available
+    });
+
+    if (response.ok) {
+      const data = await response.json();
+      setBackendReady(true);
+      return data; // Return the REAL data
+    } else {
+      // Only use demo data if backend returns error
+      console.log('Backend returned error, using demo data');
       const endpointKey = endpoint.replace('/admin/', '');
       return mockData[endpointKey] || {};
-    } finally {
-      setLoading(false);
     }
-  };
+  } catch (err) {
+    // Only use demo data if network error
+    console.log('Network error, using demo data:', err);
+    const endpointKey = endpoint.replace('/admin/', '');
+    return mockData[endpointKey] || {};
+  } finally {
+    setLoading(false);
+  }
+};
 
   const loadStats = async () => {
-    const data = await fetchAdminData('/admin/stats');
-    setStats(data);
-  };
+  const data = await fetchAdminData('/admin/stats');
+  if (data) setStats(data);
+};
 
-  const loadUsers = async () => {
-    const data = await fetchAdminData('/admin/users');
-    setUsers(data.users || data || []);
-  };
+const loadUsers = async () => {
+  const data = await fetchAdminData('/admin/users');
+  console.log('Users data:', data); // Check what's returned
+  if (data && data.users) {
+    setUsers(data.users); // Use the real users array
+  } else if (data && Array.isArray(data)) {
+    setUsers(data); // If it returns array directly
+  }
+};
 
-  const loadPatients = async () => {
-    const data = await fetchAdminData('/admin/patients');
-    setPatients(data.patients || data || []);
-  };
+const loadPatients = async () => {
+  const data = await fetchAdminData('/admin/patients');
+  console.log('Patients data:', data); // Check what's returned
+  if (data && data.patients) {
+    setPatients(data.patients);
+  } else if (data && Array.isArray(data)) {
+    setPatients(data);
+  }
+};
 
-  const loadAppointments = async () => {
-    const data = await fetchAdminData('/admin/appointments');
-    setAppointments(data.appointments || data || []);
-  };
+const loadAppointments = async () => {
+  const data = await fetchAdminData('/admin/appointments');
+  console.log('Appointments data:', data); // Check what's returned
+  if (data && data.appointments) {
+    setAppointments(data.appointments);
+  } else if (data && Array.isArray(data)) {
+    setAppointments(data);
+  }
+};
 
   useEffect(() => {
     if (activeTab === 'overview') loadStats();
